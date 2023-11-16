@@ -3,9 +3,9 @@ import pandas as pd
 import pyodbc
 import tempfile
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-from main import BRANDS
+from main import BRANDS, QUESTIONS_SYSTEM
 from database_actions import loading_new_handler_numbers, check_current_document, \
-    loading_new_handler_templates
+    loading_new_handler_templates, get_all_handlers_names
 
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
 flag_add_new_brand = False
@@ -14,7 +14,7 @@ new_brand_info = dict()
 
 @bot.message_handler(commands=["start"])
 def start_message(message: telebot.types.Message):
-    bot.send_message(message.chat.id, "Бот начал работу")
+    bot.send_message(message.chat.id, "Отправьте прайс-лист боту")
 
 
 @bot.message_handler(commands=["add_new_brand"])
@@ -108,25 +108,29 @@ def getting_recommended_retail_price_number(message: telebot.types.Message):
 
 
 @bot.message_handler(content_types=['document'])
-def handle_document(message):
+def handle_document(message: telebot.types.Message):
     file_info = bot.get_file(message.document.file_id)
     print("Получена информация о новом файле")
     file_path = file_info.file_path
+    bot.send_message(message.chat.id, "Файл получен, сейчас начнётся его обработка, это может"
+                                      "занять некоторое время.")
     downloaded_file = bot.download_file(file_path)
     print("Файл скачан в бинарном виде с серверов telegram")
     df = None
-    if file_path.endswith(".xlsb") or file_path.endswith(".xlsx") or file_path.endswith(".xls"):
+    if file_path.lower().endswith(".xlsb") or file_path.lower().endswith(".xlsx") or \
+            file_path.lower().endswith(".xls"):
         # excel file
         df = pd.read_excel(downloaded_file)
         print("Файл обработан успешно")
-        for index, row in df.iterrows():
-            article = row["PART_NO"].strip()
-            name = row["PART_NAME_RUS"].strip()
-            purchase_price = row["D_ORDER_DNP"].strip()
-            retail_price = row["LIST_PRICE"].strip()
-            print(article, name, purchase_price, retail_price, sep="; ")
-            break
-    elif file_path.endswith(".mdb") or file_path.endswith(".accdb"):
+        # пример работы с файлом
+        #for index, row in df.iterrows():
+        #    article = row["PART_NO"]
+        #    name = row["PART_NAME_RUS"]
+        #    purchase_price = row["D_ORDER_DNP"]
+        #    retail_price = row["LIST_PRICE"]
+        #    print(article, name, purchase_price, retail_price, sep="; ")
+        #    break
+    elif file_path.lower().endswith(".mdb") or file_path.lower().endswith(".accdb"):
         # access file
         suf = ".mdb" if file_path.endswith(".mdb") else ".accdb"
         temp_file = tempfile.NamedTemporaryFile(suffix=suf, delete=False)
@@ -155,6 +159,55 @@ def handle_document(message):
         return 0
 
     checking_result = check_current_document(df)  # проверка - есть ли этот файл в шаблонах
+    if not checking_result:
+        markup1 = InlineKeyboardMarkup()
+        sp = get_all_handlers_names()
+        st = "Бренд для файла:"
+        if len(sp) % 2 != 0:
+            markup1.row(InlineKeyboardButton(text=sp[0], callback_data=st + sp[0]))
+            del sp[0]
+        for ind in range(0, len(sp), 2):
+            markup1.row(InlineKeyboardButton(text=sp[ind], callback_data=st + sp[ind]),
+                        InlineKeyboardButton(text=sp[ind + 1], callback_data=st + sp[ind + 1]))
+        markup1.row(InlineKeyboardButton(text="Добавить новый обработчик",
+                                         callback_data="Добавить новый обработчик"))
+        bot.send_message(message.chat.id, "Не найдено шаблонов, под которые мог бы подойти данный"
+                                          " файл. Выберите бренд вручную или добавьте новый "
+                                          "обработчик.", reply_markup=markup1)
+    else:
+        markup2 = InlineKeyboardMarkup()
+        st1 = QUESTIONS_SYSTEM["start"].format("1") + checking_result
+        st2 = QUESTIONS_SYSTEM["start"].format("1") + QUESTIONS_SYSTEM[1]["answers"][1]
+        markup2.row(InlineKeyboardButton(text=QUESTIONS_SYSTEM[1]["answers"][0],
+                                         callback_data=st1),  # да
+                    InlineKeyboardButton(text=QUESTIONS_SYSTEM[1]["answers"][1],
+                                         callback_data=st2))  # нет
+        bot.send_message(message.chat.id, QUESTIONS_SYSTEM[1]["text"].format(checking_result),
+                         reply_markup=markup2)
+
+
+# пользователь прислал файл, автоматическое определение шаблона сработало верно
+@bot.callback_query_handler(func=lambda callback:
+                            callback.data.startswith(QUESTIONS_SYSTEM["start"].format("1")) and
+                            not callback.data.endswith(QUESTIONS_SYSTEM[1]["answers"][1]))
+def template_was_founded(callback: telebot.types.CallbackQuery):
+    print("here1")
+
+
+# пользователь прислал файл, но найденный шаблон оказался неверным
+@bot.callback_query_handler(func=lambda callback:
+                            callback.data.startswith(QUESTIONS_SYSTEM["start"].format("1")) and
+                            callback.data.endswith(QUESTIONS_SYSTEM[1]["answers"][1]))
+def founded_template_incorrect(callback: telebot.types.CallbackQuery):
+    print("here2")
+
+
+# пользователь прислал файл, но под него не было найдено шаблонов: пользователь выбирает сделать
+# новый обработчик или выбрать уже созданный вручную
+@bot.callback_query_handler(func=lambda callback: callback.data == "Добавить новый обработчик" or
+                                                  callback.data.startswith("Бренд для файла:"))
+def manually_selecting_brand_or_adding_new(callback: telebot.types.CallbackQuery):
+    print("here3")
 
 
 if __name__ == "__main__":

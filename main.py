@@ -45,3 +45,11 @@ BRANDS = sorted(['Terios', 'Great Wall', 'Nissan', 'KIA', 'Subaru', 'BYD', 'KJ',
                  'MINI COOPER', 'RAVON', 'Volkswagen', 'JAGUAR', 'VOGE', 'Volga', 'TOYOTA', 'Seat',
                  'GEELY', 'Volvo', 'Land Rover', 'CADILLAC', 'ГАС', 'JAECOO', 'Vortex',
                  'КВАДРОЦИКЛ', 'Bentley', 'KTM', 'JETTA', 'Peugeot', 'Avatr', 'Porsche', 'Alfa'])
+
+QUESTIONS_SYSTEM = {
+    "start": "QUES_SYS{0};",
+    1: {"text": "Данный файл подходит под шаблон бренда {0}. Указанный файл от этого бренда?",
+        "answers": ["Да", "Нет"]},
+    2: {},
+    3: {}
+}

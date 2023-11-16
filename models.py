@@ -1,4 +1,5 @@
 import peewee as pw
+import playhouse
 
 # служебная база данных с информацией для обработчиков
 help_db = pw.SqliteDatabase("databases/help_db.sqlite3")
@@ -56,4 +57,3 @@ class MainTable(pw.Model):
         database = main_db
         order_by = "id"
         db_table = "Main info"
-

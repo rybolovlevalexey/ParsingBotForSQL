@@ -28,7 +28,7 @@ def loading_new_handler_templates():
 
 
 # проверка текущего документа на наличие в нём уже сохранённого ранее шаблона
-def check_current_document(df: pd.DataFrame) -> typing.Union[bool, str]:  # df: pd.DataFrame
+def check_current_document(df: pd.DataFrame) -> typing.Union[bool, str]:
     sp_cols = df.columns.values.tolist()
     brand_name = None
     for elem in BrandTemplates.select():
@@ -47,6 +47,6 @@ def check_current_document(df: pd.DataFrame) -> typing.Union[bool, str]:  # df: 
     return False  # "Не найдено шаблонов, под которые мог бы подойти данный файл"
 
 
-# тестирование, удалить после полного создания функции
-# pd.read_excel("files with costs/DEALER_PRICE_LIST.xlsb")
-check_current_document(pd.read_excel("files with costs/DEALER_PRICE_LIST.xlsb"))
+def get_all_handlers_names() -> list[str]:
+    result = list(elem.brand for elem in BrandInfo.select())
+    return result
