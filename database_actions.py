@@ -5,7 +5,7 @@ import typing
 date_now = str(datetime.datetime.now().strftime("%d.%m.%Y"))
 
 
-def loading_new_handler(brand_info: dict[str, typing.Union[str, int]]):
+def loading_new_handler_numbers(brand_info: dict[str, typing.Union[str, int]]):
     for key, value in brand_info.items():
         if value.startswith("-"):
             brand_info[key] = -1
@@ -17,3 +17,7 @@ def loading_new_handler(brand_info: dict[str, typing.Union[str, int]]):
                         retail_price=(brand_info["retail_price_number"]),
                         recommended_retail_price=(brand_info["recommended_retail_price_number"]))
     br_info.save()
+
+
+def loading_new_handler_templates():
+    pass

@@ -4,7 +4,7 @@ import pyodbc
 import tempfile
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from main import BRANDS
-from database_actions import loading_new_handler
+from database_actions import loading_new_handler_numbers
 
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
 flag_add_new_brand = False
@@ -94,11 +94,16 @@ def getting_retail_price_number(message: telebot.types.Message):
 @bot.message_handler(func=lambda mes: mes.text.isdigit and flag_add_new_brand and
                                       len(new_brand_info) == 5)
 def getting_recommended_retail_price_number(message: telebot.types.Message):
+    global new_brand_info
     recommended_retail_price_number = message.text
     new_brand_info["recommended_retail_price_number"] = recommended_retail_price_number
     bot.send_message(message.chat.id, "Заполнение информации для обработчика данной марки окончено,"
                                       " спасибо за уделённое время")
-    loading_new_handler(new_brand_info)
+    loading_new_handler_numbers(new_brand_info)
+
+    global flag_add_new_brand
+    flag_add_new_brand = False
+    new_brand_info = dict()
 
 
 @bot.message_handler(content_types=['document'])
