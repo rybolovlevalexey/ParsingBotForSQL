@@ -10,9 +10,14 @@ from database_actions import loading_new_handler_numbers, check_current_document
 from parsing_files import parsing
 
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
-flag_add_new_brand = False
-new_brand_info = dict()
+flag_add_new_brand: bool = False
+flag_add_new_brand_plus: bool = False
+new_brand_info: dict[str, str] = dict()
+new_brand_info_plus: dict[str, str] = dict()
 current_DF: Union[pd.DataFrame, None] = None
+columns_available_choose: list[str] = list()
+first_line_keys: list[str] = list()
+first_line_values: list[str] = list()
 
 
 @bot.message_handler(commands=["start"])
@@ -20,6 +25,7 @@ def start_message(message: telebot.types.Message):
     bot.send_message(message.chat.id, "Отправьте прайс-лист боту")
 
 
+# начало добавления обработчика для нового бренда
 @bot.message_handler(commands=["add_new_brand"])
 def add_new_brand(message: telebot.types.Message):
     global flag_add_new_brand
@@ -46,6 +52,7 @@ def add_new_brand(message: telebot.types.Message):
                      reply_markup=markup)
 
 
+# получение названия бренда, для которого создаётся обработчик
 @bot.callback_query_handler(func=lambda callback: flag_add_new_brand and len(new_brand_info) == 0)
 def getting_brand_name(callback: telebot.types.CallbackQuery):
     brand_name = callback.data
@@ -59,6 +66,7 @@ def getting_brand_name(callback: telebot.types.CallbackQuery):
                                                "информация об артикуле в файлах данной марки.")
 
 
+# получение номера столбца с артиклем детали
 @bot.message_handler(func=lambda mes: mes.text.isdigit and flag_add_new_brand and
                                       len(new_brand_info) == 1)
 def getting_article_number(message: telebot.types.Message):
@@ -68,6 +76,7 @@ def getting_article_number(message: telebot.types.Message):
                                       "находится информация о наименовании в файлах данной марки.")
 
 
+# получение номера столбца с названием детали
 @bot.message_handler(func=lambda mes: mes.text.isdigit and flag_add_new_brand and
                                       len(new_brand_info) == 2)
 def getting_part_name_number(message: telebot.types.Message):
@@ -77,6 +86,7 @@ def getting_part_name_number(message: telebot.types.Message):
                                       "о закупочной цене в файлах данной марки.")
 
 
+# получение номера столбца с оптовой ценой детали
 @bot.message_handler(func=lambda mes: mes.text.isdigit and flag_add_new_brand and
                                       len(new_brand_info) == 3)
 def getting_purchase_price_number(message: telebot.types.Message):
@@ -95,6 +105,7 @@ def getting_retail_price_number(message: telebot.types.Message):
                                       "о рекомендованной розничной цене в файлах данной марки.")
 
 
+# получение номера столбца с рекомендованной розничной ценой
 @bot.message_handler(func=lambda mes: mes.text.isdigit and flag_add_new_brand and
                                       len(new_brand_info) == 5)
 def getting_recommended_retail_price_number(message: telebot.types.Message):
@@ -188,10 +199,10 @@ def handle_document(message: telebot.types.Message):
                             callback.data.startswith(QUESTIONS_SYSTEM["start"].format("1")) and
                             not callback.data.endswith(QUESTIONS_SYSTEM[1]["answers"][1]))
 def template_was_founded(callback: telebot.types.CallbackQuery):
-    parsing(current_DF, callback.data.split(";")[1])
     bot.send_message(callback.message.chat.id, f"Обработка и загрузка информации в базу данных "
                                                f"файла от бренда {callback.data.split(';')[1]} "
                                                f"запущена.")
+    parsing(current_DF, callback.data.split(";")[1])
 
 
 # пользователь прислал файл, но найденный шаблон оказался неверным
@@ -222,14 +233,30 @@ def founded_template_incorrect(callback: telebot.types.CallbackQuery):
 def manually_selecting_brand_or_adding_new(callback: telebot.types.CallbackQuery):
     if callback.data == "Добавить новый обработчик":
         # для отправленного файла нет созданных обработчиков
-        pass
+        global columns_available_choose  # столбцы, которые можно выбрать
+        columns_available_choose = current_DF.columns.values.tolist()
+        global first_line_keys, first_line_values
+        first_line_keys = list(list(current_DF.iterrows())[0][1].keys())
+        first_line_values = list(current_DF.iterrows())[0][1]
+        mx_len = len(max(first_line_keys, key=lambda x: len(str(x))))
+        print(mx_len)
+        output, ind = "", 0
+        for elem in first_line_values:
+            print(mx_len - len(first_line_keys[ind]) + 3)
+            output += first_line_keys[ind] + " " * ((mx_len - len(first_line_keys[ind])) * 3 + 3)
+            output += str(elem) + "\n"
+            ind += 1
+
+        bot.send_message(callback.message.chat.id,
+                         f"Слева названия столбцов, справа значения в первой строке."
+                         f"\n{output}")
     elif callback.data.startswith("Бренд для файла:"):
         # пользователь выбрал бренд, файл которого он отправил
         brand_name = callback.data.split(":")
-        parsing(current_DF, brand_name[1])
         bot.send_message(callback.message.chat.id, f"Обработка и загрузка информации в базу данных "
                                                    f"файла от бренда {brand_name[1]} "
                                                    f"запущена.")
+        parsing(current_DF, brand_name[1])
 
 
 if __name__ == "__main__":
