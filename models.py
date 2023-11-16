@@ -30,11 +30,11 @@ class BrandTemplates(pw.Model):
     id = pw.PrimaryKeyField(unique=True)
     brand = pw.CharField(default="car")  # Бренд
     # значение в клетке - строковое представление значение в шапке у конкретного бренда
-    article = pw.TextField()  # Артикул
-    part_name = pw.TextField()  # Наименование
-    purchase_price = pw.TextField()  # Цена закупа
-    retail_price = pw.TextField()  # Цена розничная
-    recommended_retail_price = pw.TextField()  # РРЦ
+    article = pw.TextField(default="null")  # Артикул
+    part_name = pw.TextField(default="null")  # Наименование
+    purchase_price = pw.TextField(default="null")  # Цена закупа
+    retail_price = pw.TextField(default="null")  # Цена розничная
+    recommended_retail_price = pw.TextField(default="null")  # РРЦ
 
     class Meta:
         database = help_db
@@ -56,3 +56,4 @@ class MainTable(pw.Model):
         database = main_db
         order_by = "id"
         db_table = "Main info"
+

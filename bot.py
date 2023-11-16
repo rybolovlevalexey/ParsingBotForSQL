@@ -4,7 +4,8 @@ import pyodbc
 import tempfile
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from main import BRANDS
-from database_actions import loading_new_handler_numbers
+from database_actions import loading_new_handler_numbers, check_current_document, \
+    loading_new_handler_templates
 
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
 flag_add_new_brand = False
@@ -113,6 +114,7 @@ def handle_document(message):
     file_path = file_info.file_path
     downloaded_file = bot.download_file(file_path)
     print("Файл скачан в бинарном виде с серверов telegram")
+    df = None
     if file_path.endswith(".xlsb") or file_path.endswith(".xlsx") or file_path.endswith(".xls"):
         # excel file
         df = pd.read_excel(downloaded_file)
@@ -147,7 +149,12 @@ def handle_document(message):
         else:
             print("Передан файл с некорректным количеством таблиц")
     else:
-        print("Прислан файл неверного расширения")
+        bot.send_message(message.chat.id, "Прислан файл неверного расширения")
+        return 0
+    if df is None:
+        return 0
+
+    checking_result = check_current_document(df)  # проверка - есть ли этот файл в шаблонах
 
 
 if __name__ == "__main__":

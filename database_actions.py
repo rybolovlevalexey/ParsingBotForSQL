@@ -1,10 +1,12 @@
-from models import BrandInfo
+from models import BrandInfo, BrandTemplates
 import datetime
 import typing
+import pandas as pd
 
 date_now = str(datetime.datetime.now().strftime("%d.%m.%Y"))
 
 
+# добавление нового обработчика по номерам необходимых столбцов
 def loading_new_handler_numbers(brand_info: dict[str, typing.Union[str, int]]):
     for key, value in brand_info.items():
         if value.startswith("-"):
@@ -19,5 +21,32 @@ def loading_new_handler_numbers(brand_info: dict[str, typing.Union[str, int]]):
     br_info.save()
 
 
+# добавление нового обработчика по шаблонам столбцов, после этого можно ещё и наполнить
+# таблицу с номерами столбцов, т.к. есть вся необходимая информация
 def loading_new_handler_templates():
     pass
+
+
+# проверка текущего документа на наличие в нём уже сохранённого ранее шаблона
+def check_current_document(df: pd.DataFrame) -> typing.Union[bool, str]:  # df: pd.DataFrame
+    sp_cols = df.columns.values.tolist()
+    brand_name = None
+    for elem in BrandTemplates.select():
+        flag = True
+        for temp in filter(lambda x: x != "null", [elem.article, elem.part_name,
+                                                   elem.purchase_price, elem.retail_price,
+                                                   elem.recommended_retail_price]):
+            if temp not in sp_cols:
+                flag = False
+                break
+        if flag:
+            brand_name = elem.brand
+            break
+    if brand_name is not None:
+        return brand_name  # f"Данный файл подходит под шаблон компании {brand_name}"
+    return False  # "Не найдено шаблонов, под которые мог бы подойти данный файл"
+
+
+# тестирование, удалить после полного создания функции
+# pd.read_excel("files with costs/DEALER_PRICE_LIST.xlsb")
+check_current_document(pd.read_excel("files with costs/DEALER_PRICE_LIST.xlsb"))
