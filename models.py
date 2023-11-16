@@ -1,9 +1,9 @@
 import peewee as pw
 
 # служебная база данных с информацией для обработчиков
-db = pw.SqliteDatabase("db.sqlite3")
+help_db = pw.SqliteDatabase("databases/help_db.sqlite3")
 # главная база данных, заполняемая из поступающих документов
-main_db = pw.SqliteDatabase("main_db.sqlite3")
+main_db = pw.SqliteDatabase("databases/main_db.sqlite3")
 
 
 class BrandInfo(pw.Model):
@@ -16,10 +16,9 @@ class BrandInfo(pw.Model):
     purchase_price = pw.IntegerField()  # Цена закупа
     retail_price = pw.IntegerField()  # Цена розничная
     recommended_retail_price = pw.IntegerField()  # РРЦ
-    upload_date = pw.TextField()  # Дата загрузки цен
 
     class Meta:
-        database = db
+        database = help_db
         order_by = "id"
         db_table = "Info about every car brand"
 
