@@ -10,7 +10,7 @@ class BrandInfo(pw.Model):
     id = pw.PrimaryKeyField(unique=True)
     brand = pw.CharField(default="car")  # Бренд
     # названия столбцов - названия необходимых столбцов в главной бд
-    # значения - номер столбца в excel необходимый для конкретного параметра (считать от нуля)
+    # значения - номер столбца в excel необходимый для конкретного параметра (считать от одного)
     article = pw.IntegerField()  # Артикул
     part_name = pw.IntegerField()  # Наименование
     purchase_price = pw.IntegerField()  # Цена закупа
