@@ -8,7 +8,9 @@ from main import BRANDS, QUESTIONS_SYSTEM
 from database_actions import loading_new_handler_numbers, check_current_document, \
     loading_new_handler_templates, get_all_handlers_names, check_new_brand_name
 from parsing_files import parsing
+import urllib3
 
+# http_settings = urllib3.PoolManager(timeout=urllib3.Timeout(connect=2.0, read=2.0))
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
 flag_add_new_brand: bool = False
 flag_add_new_brand_plus: bool = False
@@ -265,7 +267,7 @@ def manually_selecting_brand_or_adding_new(callback: telebot.types.CallbackQuery
         first_line_keys = list(list(current_DF.iterrows())[0][1].keys())
         first_line_values = list(current_DF.iterrows())[0][1]
         bot.send_message(callback.message.chat.id,
-                         f"Введите <b>название бренда</b>, для которого добавляется обработчик.",
+                         f"Введите <b>'название бренда'</b>, для которого добавляется обработчик.",
                          parse_mode="html")
         global flag_add_new_brand_plus
         flag_add_new_brand_plus = True
@@ -293,7 +295,7 @@ def getting_brand_name_plus(message: telebot.types.Message):
         mark = make_markup_for_info_plus()
         output = make_output_with_first_line()
         bot.send_message(message.chat.id, "Выберите столбец, в котором находится информация об "
-                         "<b>артикле товара</b>.\n\n" + output,
+                         "<b>'артикле товара'</b>.\n\n" + output,
                          reply_markup=mark, parse_mode="html")
     else:
         bot.send_message(message.chat.id, "Такое название бренда уже занято, "
@@ -310,8 +312,9 @@ def getting_article_plus(callback: telebot.types.CallbackQuery):
         first_line_keys.remove(column_article)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id,
-                     "Выберите столбец, в котором находится информация о <b>наименовании товара</b>"
-                     ".\n\n" + make_output_with_first_line(), reply_markup=mark, parse_mode="HTML")
+                     "Выберите столбец, в котором находится информация о <b>'наименовании товара'"
+                     "</b>.\n\n" + make_output_with_first_line(),
+                     reply_markup=mark, parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda cal: flag_add_new_brand_plus and
@@ -324,7 +327,7 @@ def getting_part_name_plus(callback: telebot.types.CallbackQuery):
         first_line_keys.remove(column_part_name)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id, f"Выберите столбец, в котором находится информация "
-                     f"об <b>оптовой цене товара </b>.\n\n{make_output_with_first_line()}",
+                     f"об <b>'оптовой цене товара'</b>.\n\n{make_output_with_first_line()}",
                      reply_markup=mark, parse_mode="HTML")
 
 
@@ -338,7 +341,7 @@ def getting_purchase_price_plus(callback: telebot.types.CallbackQuery):
         first_line_keys.remove(column_purchase_price)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id, f"Выберите столбец, в котором находится информация "
-                     f"о <b>розничной цене товара </b>.\n\n{make_output_with_first_line()}",
+                     f"о <b>'розничной цене товара'</b>.\n\n{make_output_with_first_line()}",
                      reply_markup=mark, parse_mode="HTML")
 
 
@@ -352,7 +355,7 @@ def getting_retail_price_plus(callback: telebot.types.CallbackQuery):
         first_line_keys.remove(column_retail_price)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id, f"Выберите столбец, в котором находится информация "
-                     f"о <b> рекомендованной розничной цене товара </b>.\n\n"
+                     f"о <b>'рекомендованной розничной цене товара'</b>.\n\n"
                      f"{make_output_with_first_line()}",
                      reply_markup=mark, parse_mode="HTML")
 
@@ -369,12 +372,12 @@ def getting_recommended_retail_price_plus(callback: telebot.types.CallbackQuery)
     bot.send_message(callback.message.chat.id, f"Получена вся необходимая информация, спасибо за "
                                                f"уделённое время.",
                      parse_mode="HTML")
-    loading_new_handler_templates(new_brand_info_plus)
-    print(new_brand_info_plus)
+    result = loading_new_handler_templates(new_brand_info_plus, current_DF)
+
     global flag_add_new_brand_plus
     flag_add_new_brand_plus = False
     new_brand_info_plus = dict()
 
 
 if __name__ == "__main__":
-    bot.polling(none_stop=True)
+    bot.polling(none_stop=True, interval=0)
