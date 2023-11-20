@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 from models import BrandInfo, BrandTemplates, MainTable
 
@@ -5,12 +6,14 @@ from models import BrandInfo, BrandTemplates, MainTable
 # получен dataFrame скачанного файла и название бренда
 # необходимо определить названия столбцов с нужной информацией загрузить её в основную базу данных
 def parsing(data_frame: pd.DataFrame, brand_name: str):
+    date_now = str(datetime.datetime.now().strftime("%d.%m.%Y"))
     table_header = data_frame.keys().tolist()
+
     # data_frame - получаемые на обработку данные
     # brand_name - название бренда
     print("Начата загрузка информации в главную базу данных")
     # название поля в main_db: название столбца в файле
-    column_names = {"brand": None, "article": None, "part_name": None, "purchase_price": None,
+    column_names = {"article": None, "part_name": None, "purchase_price": None,
                     "retail_price": None, "recommended_retail_price": None}
 
     # заполнение какой-то из таблиц, в случае если в ней не хватает информации
@@ -60,7 +63,27 @@ def parsing(data_frame: pd.DataFrame, brand_name: str):
 
     # наполнение словаря column_names названиями столбцов в файле
     data_for_dict = BrandTemplates.get(BrandTemplates.brand == brand_name)
+    column_names["article"] = data_for_dict.article
+    column_names["part_name"] = data_for_dict.part_name
+    column_names["purchase_price"] = data_for_dict.purchase_price
+    column_names["retail_price"] = data_for_dict.retail_price
+    column_names["recommended_retail_price"] = data_for_dict.recommended_retail_price
 
-    for elem in data_frame.iterrows():
-        print(elem)
-        break
+    for data_line in data_frame.iterrows():
+        data_series = data_line[1]
+        data = MainTable(brand=brand_name, upload_date=date_now)
+        if column_names["article"] != "null":
+            data.article = data_series.loc[column_names["article"]]
+        if column_names["part_name"] != "null":
+            data.part_name = data_series.loc[column_names["part_name"]]
+        if column_names["purchase_price"] != "null":
+            data.purchase_price = data_series.loc[column_names["purchase_price"]]
+        if column_names["retail_price"] != "null":
+            data.retail_price = data_series.loc[column_names["retail_price"]]
+        if column_names["recommended_retail_price"] != "null":
+            data.recommended_retail_price = data_series.loc[column_names[
+            "recommended_retail_price"]]
+
+        data.save()
+
+    print("Загрузка информации в главную базу данных окончена")

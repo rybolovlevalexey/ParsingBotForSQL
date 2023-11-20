@@ -45,11 +45,11 @@ class BrandTemplates(pw.Model):
 class MainTable(pw.Model):
     id = pw.PrimaryKeyField(unique=True)
     brand = pw.CharField(default="car")  # Бренд
-    article = pw.IntegerField()  # Артикул
-    part_name = pw.IntegerField()  # Наименование
-    purchase_price = pw.IntegerField()  # Цена закупа
-    retail_price = pw.IntegerField()  # Цена розничная
-    recommended_retail_price = pw.IntegerField()  # РРЦ
+    article = pw.TextField(default="null")  # Артикул
+    part_name = pw.TextField(default="null")  # Наименование
+    purchase_price = pw.TextField(default="null")  # Цена закупа
+    retail_price = pw.TextField(default="null")  # Цена розничная
+    recommended_retail_price = pw.TextField(default="null")  # РРЦ
     upload_date = pw.TextField()  # Дата загрузки цен
 
     class Meta:
