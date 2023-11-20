@@ -260,6 +260,7 @@ def manually_selecting_brand_or_adding_new(callback: telebot.types.CallbackQuery
         # для отправленного файла нет созданных обработчиков
         global columns_available_choose  # столбцы, которые можно выбрать
         columns_available_choose = current_DF.columns.values.tolist()
+        columns_available_choose.append("Отсутствует")
         global first_line_keys, first_line_values
         first_line_keys = list(list(current_DF.iterrows())[0][1].keys())
         first_line_values = list(current_DF.iterrows())[0][1]
@@ -302,10 +303,11 @@ def getting_brand_name_plus(message: telebot.types.Message):
 @bot.callback_query_handler(func=lambda cal: flag_add_new_brand_plus and
                                              len(new_brand_info_plus) == 1)
 def getting_article_plus(callback: telebot.types.CallbackQuery):
-    column_article_number = callback.data
-    new_brand_info_plus["article"] = column_article_number
-    columns_available_choose.remove(column_article_number)
-    first_line_keys.remove(column_article_number)
+    column_article = callback.data
+    new_brand_info_plus["article"] = column_article
+    if column_article != "Отсутствует":
+        columns_available_choose.remove(column_article)
+        first_line_keys.remove(column_article)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id,
                      "Выберите столбец, в котором находится информация о <b>наименовании товара</b>"
@@ -317,8 +319,9 @@ def getting_article_plus(callback: telebot.types.CallbackQuery):
 def getting_part_name_plus(callback: telebot.types.CallbackQuery):
     column_part_name = callback.data
     new_brand_info_plus["part_name"] = column_part_name
-    columns_available_choose.remove(column_part_name)
-    first_line_keys.remove(column_part_name)
+    if column_part_name != "Отсутствует":
+        columns_available_choose.remove(column_part_name)
+        first_line_keys.remove(column_part_name)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id, f"Выберите столбец, в котором находится информация "
                      f"об <b>оптовой цене товара </b>.\n\n{make_output_with_first_line()}",
@@ -330,8 +333,9 @@ def getting_part_name_plus(callback: telebot.types.CallbackQuery):
 def getting_purchase_price_plus(callback: telebot.types.CallbackQuery):
     column_purchase_price = callback.data
     new_brand_info_plus["purchase_price"] = column_purchase_price
-    columns_available_choose.remove(column_purchase_price)
-    first_line_keys.remove(column_purchase_price)
+    if column_purchase_price != "Отсутствует":
+        columns_available_choose.remove(column_purchase_price)
+        first_line_keys.remove(column_purchase_price)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id, f"Выберите столбец, в котором находится информация "
                      f"о <b>розничной цене товара </b>.\n\n{make_output_with_first_line()}",
@@ -343,8 +347,9 @@ def getting_purchase_price_plus(callback: telebot.types.CallbackQuery):
 def getting_retail_price_plus(callback: telebot.types.CallbackQuery):
     column_retail_price = callback.data
     new_brand_info_plus["retail_price"] = column_retail_price
-    columns_available_choose.remove(column_retail_price)
-    first_line_keys.remove(column_retail_price)
+    if column_retail_price != "Отсутствует":
+        columns_available_choose.remove(column_retail_price)
+        first_line_keys.remove(column_retail_price)
     mark = make_markup_for_info_plus()
     bot.send_message(callback.message.chat.id, f"Выберите столбец, в котором находится информация "
                      f"о <b> рекомендованной розничной цене товара </b>.\n\n"
@@ -355,18 +360,19 @@ def getting_retail_price_plus(callback: telebot.types.CallbackQuery):
 @bot.callback_query_handler(func=lambda cal: flag_add_new_brand_plus and
                                              len(new_brand_info_plus) == 5)
 def getting_recommended_retail_price_plus(callback: telebot.types.CallbackQuery):
+    global new_brand_info_plus
     column_recommended_retail_price = callback.data
     new_brand_info_plus["recommended_retail_price"] = column_recommended_retail_price
-    columns_available_choose.remove(column_recommended_retail_price)
-    first_line_keys.remove(column_recommended_retail_price)
+    if column_recommended_retail_price != "Отсутствует":
+        columns_available_choose.remove(column_recommended_retail_price)
+        first_line_keys.remove(column_recommended_retail_price)
     bot.send_message(callback.message.chat.id, f"Получена вся необходимая информация, спасибо за "
                                                f"уделённое время.",
                      parse_mode="HTML")
     loading_new_handler_templates(new_brand_info_plus)
-
+    print(new_brand_info_plus)
     global flag_add_new_brand_plus
     flag_add_new_brand_plus = False
-    global new_brand_info_plus
     new_brand_info_plus = dict()
 
 
