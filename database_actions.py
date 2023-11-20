@@ -23,7 +23,7 @@ def loading_new_handler_numbers(brand_info: dict[str, typing.Union[str, int]]):
 
 # добавление нового обработчика по шаблонам столбцов, после этого можно ещё и наполнить
 # таблицу с номерами столбцов, т.к. есть вся необходимая информация
-def loading_new_handler_templates():
+def loading_new_handler_templates(brand_info: dict[str, str]):
     pass
 
 
