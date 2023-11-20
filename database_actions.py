@@ -34,16 +34,23 @@ def loading_new_handler_templates(brand_info: dict[str, str], df: pd.DataFrame) 
                               recommended_retail_price=brand_info["recommended_retail_price"])
     br_temps.save()
     table_header = list(list(df.iterrows())[0][1].keys())
-    br_info = BrandInfo(brand=brand_info["brand_name"], templates_filled=True)
-    for key, value in brand_info.items():
-        if key == "brand_name":
-            continue
-        if value != "null":
-            eval(f"br_info.{key} = {table_header.index(value) + 1}")
-        else:
-            eval(f"br_info.{key} = -1")
+    br_info = BrandInfo(brand=brand_info["brand_name"], templates_filled=True,
+                        article=table_header.index(brand_info["article"]) + 1 if brand_info[
+                                "article"] != "null" else -1,
+                        part_name=table_header.index(brand_info["part_name"]) + 1 if brand_info[
+                                  "part_name"] != "null" else -1,
+                        purchase_price=table_header.index(brand_info["purchase_price"]) + 1 if
+                        brand_info["purchase_price"] != "null" else -1,
+                        retail_price=table_header.index(brand_info["retail_price"]) + 1 if
+                        brand_info["retail_price"] != "null" else -1,
+                        recommended_retail_price=table_header.index(
+                            brand_info["recommended_retail_price"]) + 1 if brand_info[
+                            "recommended_retail_price"] != "null" else -1)
+
     if BrandInfo.select().where(BrandInfo.brand == brand_info["brand_name"]).count == 0 or \
-            not list(BrandInfo.select(BrandInfo.templates_filled).where(
+            len(list(elem.templates_filled for elem in BrandInfo.select().where(
+                BrandInfo.brand == brand_info["brand_name"]))) == 0 or \
+            not list(elem.templates_filled for elem in BrandInfo.select().where(
                 BrandInfo.brand == brand_info["brand_name"]))[0]:
         br_info.save()
     return True

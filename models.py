@@ -1,5 +1,4 @@
 import peewee as pw
-import playhouse
 
 # служебная база данных с информацией для обработчиков
 help_db = pw.SqliteDatabase("databases/help_db.sqlite3")

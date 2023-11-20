@@ -373,7 +373,8 @@ def getting_recommended_retail_price_plus(callback: telebot.types.CallbackQuery)
                                                f"уделённое время.",
                      parse_mode="HTML")
     result = loading_new_handler_templates(new_brand_info_plus, current_DF)
-
+    if result:
+        parsing(current_DF, new_brand_info_plus["brand_name"])
     global flag_add_new_brand_plus
     flag_add_new_brand_plus = False
     new_brand_info_plus = dict()
