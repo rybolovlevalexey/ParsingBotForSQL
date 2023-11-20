@@ -50,3 +50,11 @@ def check_current_document(df: pd.DataFrame) -> typing.Union[bool, str]:
 def get_all_handlers_names() -> list[str]:
     result = list(elem.brand for elem in BrandInfo.select())
     return result
+
+
+def check_new_brand_name(brand_name: str) -> bool:  # True - такого имени ещё нет в базе данных
+    res1 = BrandInfo.select().where(brand_name == BrandInfo.brand)
+    res2 = BrandTemplates.select().where(brand_name == BrandTemplates.brand)
+    if res1.count() == res2.count() == 0:
+        return True
+    return False

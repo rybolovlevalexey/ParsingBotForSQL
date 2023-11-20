@@ -6,7 +6,7 @@ from typing import Union
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from main import BRANDS, QUESTIONS_SYSTEM
 from database_actions import loading_new_handler_numbers, check_current_document, \
-    loading_new_handler_templates, get_all_handlers_names
+    loading_new_handler_templates, get_all_handlers_names, check_new_brand_name
 from parsing_files import parsing
 
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
@@ -18,6 +18,31 @@ current_DF: Union[pd.DataFrame, None] = None
 columns_available_choose: list[str] = list()
 first_line_keys: list[str] = list()
 first_line_values: list[str] = list()
+
+
+def make_output_with_first_line():
+    keys: list[str] = first_line_keys
+    values: list[str] = first_line_values
+    output, ind = "", 0
+    for key in keys:
+        elem = values[key]
+        output += keys[ind] + "-" * 5
+        output += str(elem) + "\n"
+        ind += 1
+    return output
+
+
+def make_markup_for_info_plus() -> InlineKeyboardMarkup:
+    markup = InlineKeyboardMarkup()
+    for i in range(0, len(columns_available_choose) // 2):
+        text1 = columns_available_choose[2 * i]
+        text2 = columns_available_choose[2 * i + 1]
+        markup.row(InlineKeyboardButton(text=text1, callback_data=text1),
+                   InlineKeyboardButton(text=text2, callback_data=text2))
+    if len(columns_available_choose) % 2 != 0:
+        markup.add(InlineKeyboardButton(text=columns_available_choose[-1],
+                                        callback_data=columns_available_choose[-1]))
+    return markup
 
 
 @bot.message_handler(commands=["start"])
@@ -238,18 +263,11 @@ def manually_selecting_brand_or_adding_new(callback: telebot.types.CallbackQuery
         global first_line_keys, first_line_values
         first_line_keys = list(list(current_DF.iterrows())[0][1].keys())
         first_line_values = list(current_DF.iterrows())[0][1]
-        mx_len = len(max(first_line_keys, key=lambda x: len(str(x))))
-        print(mx_len)
-        output, ind = "", 0
-        for elem in first_line_values:
-            print(mx_len - len(first_line_keys[ind]) + 3)
-            output += first_line_keys[ind] + " " * ((mx_len - len(first_line_keys[ind])) * 3 + 3)
-            output += str(elem) + "\n"
-            ind += 1
-
         bot.send_message(callback.message.chat.id,
-                         f"Слева названия столбцов, справа значения в первой строке."
-                         f"\n{output}")
+                         f"Введите <b>название бренда</b>, для которого добавляется обработчик.",
+                         parse_mode="html")
+        global flag_add_new_brand_plus
+        flag_add_new_brand_plus = True
     elif callback.data.startswith("Бренд для файла:"):
         # пользователь выбрал бренд, файл которого он отправил
         brand_name = callback.data.split(":")
@@ -257,6 +275,42 @@ def manually_selecting_brand_or_adding_new(callback: telebot.types.CallbackQuery
                                                    f"файла от бренда {brand_name[1]} "
                                                    f"запущена.")
         parsing(current_DF, brand_name[1])
+
+
+# получение названия бренда, для которого создаётся обработчик
+@bot.message_handler(func=lambda mes: flag_add_new_brand_plus and len(new_brand_info_plus) == 0)
+def getting_brand_name_plus(message: telebot.types.Message):
+    brand_name = message.text
+    if check_new_brand_name(brand_name):
+        new_brand_info_plus["brand_name"] = brand_name
+        bot.send_message(message.chat.id, "Название бренда введено корректно, сейчас вам будет "
+                                          "предоставлена информация о названиях столбцов в "
+                                          "отправленном вами файле, а также об информации в первой "
+                                          "строке. На основе этих вводных вам необходимо будет "
+                                          "ответить на несколько вопросов с возможностью "
+                                          "выбора ответа.")
+        mark = make_markup_for_info_plus()
+        output = make_output_with_first_line()
+        bot.send_message(message.chat.id, output)
+        bot.send_message(message.chat.id, "Выберите столбец, в котором находится информация об "
+                                          "<b>артикле</b> товара.",
+                         reply_markup=mark, parse_mode="html")
+    else:
+        bot.send_message(message.chat.id, "Такое название бренда уже занято, "
+                                          "попробуйте использовать другое.")
+
+
+@bot.callback_query_handler(func=lambda cal: flag_add_new_brand_plus and
+                                             len(new_brand_info_plus) == 1)
+def getting_article_number_plus(callback: telebot.types.CallbackQuery):
+    column_article_number = callback.data
+    new_brand_info_plus["article_number"] = column_article_number
+    columns_available_choose.remove(column_article_number)
+    first_line_keys.remove(column_article_number)
+    mark = make_markup_for_info_plus()
+    bot.send_message(callback.message.chat.id,
+                     "Выберите столбец, в котором находится информация о <b>наименовании товара</b>"
+                     ".\n" + make_output_with_first_line(), reply_markup=mark, parse_mode="HTML")
 
 
 if __name__ == "__main__":
