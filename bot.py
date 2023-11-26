@@ -9,6 +9,7 @@ from database_actions import loading_new_handler_numbers, check_current_document
     loading_new_handler_templates, get_all_handlers_names, check_new_brand_name
 from parsing_files import parsing
 import urllib3
+import asyncio
 
 # http_settings = urllib3.PoolManager(timeout=urllib3.Timeout(connect=2.0, read=2.0))
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
@@ -229,7 +230,7 @@ def template_was_founded(callback: telebot.types.CallbackQuery):
     bot.send_message(callback.message.chat.id, f"Обработка и загрузка информации в базу данных "
                                                f"файла от бренда {callback.data.split(';')[1]} "
                                                f"запущена.")
-    parsing(current_DF, callback.data.split(";")[1])
+    asyncio.run(parsing(current_DF, callback.data.split(";")[1]))
 
 
 # пользователь прислал файл, но найденный шаблон оказался неверным
@@ -277,7 +278,7 @@ def manually_selecting_brand_or_adding_new(callback: telebot.types.CallbackQuery
         bot.send_message(callback.message.chat.id, f"Обработка и загрузка информации в базу данных "
                                                    f"файла от бренда {brand_name[1]} "
                                                    f"запущена.")
-        parsing(current_DF, brand_name[1])
+        asyncio.run(parsing(current_DF, brand_name[1]))
 
 
 # получение названия бренда, для которого создаётся обработчик
@@ -374,7 +375,7 @@ def getting_recommended_retail_price_plus(callback: telebot.types.CallbackQuery)
                      parse_mode="HTML")
     result = loading_new_handler_templates(new_brand_info_plus, current_DF)
     if result:
-        parsing(current_DF, new_brand_info_plus["brand_name"])
+        asyncio.run(parsing(current_DF, new_brand_info_plus["brand_name"]))
     global flag_add_new_brand_plus
     flag_add_new_brand_plus = False
     new_brand_info_plus = dict()
