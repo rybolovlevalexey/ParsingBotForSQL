@@ -11,7 +11,6 @@ from parsing_files import parsing
 import urllib3
 import asyncio
 
-# http_settings = urllib3.PoolManager(timeout=urllib3.Timeout(connect=2.0, read=2.0))
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
 flag_add_new_brand: bool = False
 flag_add_new_brand_plus: bool = False

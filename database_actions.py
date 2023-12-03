@@ -1,7 +1,8 @@
-from models import BrandInfo, BrandTemplates
+from models import BrandInfo, BrandTemplates, MainTable
 import datetime
 import typing
 import pandas as pd
+import json
 
 date_now = str(datetime.datetime.now().strftime("%d.%m.%Y"))
 
@@ -91,3 +92,13 @@ def check_new_brand_name(brand_name: str) -> bool:  # True - такого име
     if res1.count() == res2.count() == 0:
         return True
     return False
+
+
+# получение необходимой информации по названию детали
+def get_info_by_part_name(part_name: str) -> dict[str, str]:
+    result = MainTable.get(part_name=part_name)
+    return result.receive_json()
+
+
+# БОЛТ
+print(get_info_by_part_name("БОЛТ"))

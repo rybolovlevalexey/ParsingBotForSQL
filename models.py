@@ -56,3 +56,11 @@ class MainTable(pw.Model):
         database = main_db
         order_by = "id"
         db_table = "Main info"
+
+    def receive_json(self):
+        return {'brand': self.brand, 'article': self.article,
+                'part_name': self.part_name, 'purchase_price': self.purchase_price,
+                'retail_price': self.article, 'recommended_retail_price': self.article}
+
+    def __str__(self):
+        return self.article + self.part_name
