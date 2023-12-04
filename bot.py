@@ -10,6 +10,7 @@ from database_actions import loading_new_handler_numbers, check_current_document
 from parsing_files import parsing
 import urllib3
 import asyncio
+from telethon import TelegramClient
 
 bot = telebot.TeleBot(open("bot info.txt").readlines()[0].strip())
 flag_add_new_brand: bool = False

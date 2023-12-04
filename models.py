@@ -63,4 +63,4 @@ class MainTable(pw.Model):
                 'retail_price': self.article, 'recommended_retail_price': self.article}
 
     def __str__(self):
-        return self.article + self.part_name
+        return f"{self.article} {self.part_name}"

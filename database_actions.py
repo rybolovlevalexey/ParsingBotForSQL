@@ -100,5 +100,16 @@ def get_info_by_part_name(part_name: str) -> dict[str, str]:
     return result.receive_json()
 
 
+def get_info_by_by_article_and_brand(article: str, brand: str) -> dict[str, str]:
+    result = list(MainTable.select().where((MainTable.article == article) &
+                                           (MainTable.brand == brand)))
+    last_one = max(result, key=lambda x: x.upload_date)
+    res_dict = {'brand': last_one.brand, 'article': last_one.article,
+                'part_name': last_one.part_name, 'purchase_price': last_one.purchase_price,
+                'retail_price': last_one.article, 'recommended_retail_price': last_one.article}
+    return res_dict
+
+
 # БОЛТ
 print(get_info_by_part_name("БОЛТ"))
+print(get_info_by_by_article_and_brand("1311338", "jlr"))
